@@ -6,6 +6,11 @@ from pydantic import BaseModel
 
 from challenges.dispatch import dispatch_predict
 
+try:
+    from app import build_info  # generated during deploy
+except Exception:
+    build_info = None
+
 app = FastAPI()
 
 
