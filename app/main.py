@@ -29,10 +29,18 @@ def health():
 @app.get("/version")
 def version():
     challenge = os.getenv("CHALLENGE", "nlp").lower()
+
+    git_sha = getattr(build_info, "GIT_SHA", None) if build_info else None
+    model_version = getattr(build_info, "MODEL_VERSION", None) if build_info else None
+
+    # build_info first (always matches deployed commit), env second
+    git_sha = git_sha or os.getenv("GIT_SHA", "unknown")
+    model_version = model_version or os.getenv("MODEL_VERSION", "stub-0")
+
     return {
-        "git_sha": os.getenv("GIT_SHA", "unknown"),
+        "git_sha": git_sha,
         "challenge": challenge,
-        "model_version": os.getenv("MODEL_VERSION", "stub-0"),
+        "model_version": model_version,
     }
 
 
