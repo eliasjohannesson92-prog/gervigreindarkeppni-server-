@@ -13,3 +13,7 @@ def health():
 @app.post("/predict")
 def predict(req: PredictRequest):
     return {"prediction": "dummy", "echo": req.text}
+    
+@app.get("/")
+def root():
+    return {"status": "ok", "docs": "/docs", "health": "/health"}
