@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from challenges.dispatch import dispatch_predict
 
 try:
-    from app import build_info  # generated during deploy
+    from . import build_info  # generated during deploy
 except Exception:
     build_info = None
 
@@ -25,7 +25,6 @@ class PredictRequest(BaseModel):
 def health():
     return {"status": "ok"}
 
-
 @app.get("/version")
 def version():
     challenge = os.getenv("CHALLENGE", "nlp").lower()
@@ -33,7 +32,6 @@ def version():
     git_sha = getattr(build_info, "GIT_SHA", None) if build_info else None
     model_version = getattr(build_info, "MODEL_VERSION", None) if build_info else None
 
-    # build_info first (always matches deployed commit), env second
     git_sha = git_sha or os.getenv("GIT_SHA", "unknown")
     model_version = model_version or os.getenv("MODEL_VERSION", "stub-0")
 
@@ -42,7 +40,6 @@ def version():
         "challenge": challenge,
         "model_version": model_version,
     }
-
 
 @app.post("/predict")
 def predict(req: PredictRequest):
