@@ -25,24 +25,21 @@ class PredictRequest(BaseModel):
 def health():
     return {"status": "ok"}
 
-
 @app.get("/version")
 def version():
     challenge = os.getenv("CHALLENGE", "nlp").lower()
 
-    git_sha = os.getenv("GIT_SHA", "unknown")
-    model_version = os.getenv("MODEL_VERSION", "stub-0")
+    git_sha = getattr(build_info, "GIT_SHA", None) if build_info else None
+    model_version = getattr(build_info, "MODEL_VERSION", None) if build_info else None
 
-    if build_info is not None:
-        git_sha = getattr(build_info, "GIT_SHA", git_sha)
-        model_version = getattr(build_info, "MODEL_VERSION", model_version)
+    git_sha = git_sha or os.getenv("GIT_SHA", "unknown")
+    model_version = model_version or os.getenv("MODEL_VERSION", "stub-0")
 
     return {
         "git_sha": git_sha,
         "challenge": challenge,
         "model_version": model_version,
     }
-
 
 @app.post("/predict")
 def predict(req: PredictRequest):
