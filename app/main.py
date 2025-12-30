@@ -6,6 +6,11 @@ from pydantic import BaseModel
 
 from challenges.dispatch import dispatch_predict
 
+try:
+    from . import build_info  # generated during deploy
+except Exception:
+    build_info = None
+
 app = FastAPI()
 
 
@@ -24,10 +29,18 @@ def health():
 @app.get("/version")
 def version():
     challenge = os.getenv("CHALLENGE", "nlp").lower()
+
+    git_sha = os.getenv("GIT_SHA", "unknown")
+    model_version = os.getenv("MODEL_VERSION", "stub-0")
+
+    if build_info is not None:
+        git_sha = getattr(build_info, "GIT_SHA", git_sha)
+        model_version = getattr(build_info, "MODEL_VERSION", model_version)
+
     return {
-        "git_sha": os.getenv("GIT_SHA", "unknown"),
+        "git_sha": git_sha,
         "challenge": challenge,
-        "model_version": os.getenv("MODEL_VERSION", "stub-0"),
+        "model_version": model_version,
     }
 
 
