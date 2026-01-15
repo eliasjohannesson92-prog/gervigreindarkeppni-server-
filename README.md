@@ -91,7 +91,7 @@ pip install -r requirements.txt
 
 ### Running the Server
 
-Run the development server with uvicorn:
+Run the development server with uvicorn from the project root:
 
 ```bash
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
@@ -101,6 +101,8 @@ The API will be available at http://localhost:8000
 
 - API documentation: http://localhost:8000/docs
 - Alternative docs: http://localhost:8000/redoc
+
+**Note**: The entry point `main.py` imports the FastAPI app from `app/main.py`, so we use `main:app` as the uvicorn target.
 
 ### Running Tests
 
