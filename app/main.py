@@ -2,13 +2,12 @@ import logging
 import os
 import sys
 import uuid
+from contextvars import ContextVar
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
-
-from challenges.dispatch import dispatch_predict
 
 try:
     from . import build_info  # generated during deploy
@@ -23,25 +22,33 @@ logging.basicConfig(
     stream=sys.stdout
 )
 
+# Thread-safe context variable for request ID
+request_id_ctx: ContextVar[str] = ContextVar('request_id', default='')
+
+
+class RequestIDFilter(logging.Filter):
+    """Filter to add request_id from context to log records."""
+    def filter(self, record):
+        record.request_id = request_id_ctx.get('')
+        return True
+
+
+# Add filter to all handlers
+for handler in logging.root.handlers:
+    handler.addFilter(RequestIDFilter())
+
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         request.state.request_id = request_id
         
-        # Add request_id to logging context
-        old_factory = logging.getLogRecordFactory()
-        def record_factory(*args, **kwargs):
-            record = old_factory(*args, **kwargs)
-            record.request_id = request_id
-            return record
-        logging.setLogRecordFactory(record_factory)
+        # Set request ID in context for logging
+        request_id_ctx.set(request_id)
         
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         
-        # Restore original factory
-        logging.setLogRecordFactory(old_factory)
         return response
 
 
